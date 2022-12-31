@@ -14,6 +14,11 @@ public class TestReqres {
     static final Integer STATUSOK = 200;
     static final Integer STATUSBAD = 404;
 
+    public static void SPEC200() {
+        Specifications.runSpecification(Specifications.requestSpecification(URL), Specifications.responseSpecification200());
+    }
+
+
     @Test
     public void testGetRequest() {
         int i = 6;
@@ -155,12 +160,11 @@ public class TestReqres {
         String name = "morpheus";
         String job = "zion resident";
 
+        Specifications.runSpecification(Specifications.requestSpecification(URL), Specifications.responseSpecification200());
         ModelCREATE modelCREATE = new ModelCREATE("morpheus", "zion resident");
         ModelCreateResponse modelCreateResponse = given()
-                .baseUri(URL)
                 .body(modelCREATE)
                 .when()
-                .contentType(ContentType.JSON)
                 .put("api/users/2")
                 .then().log().all()
                 .extract().as(ModelCreateResponse.class);
@@ -174,6 +178,97 @@ public class TestReqres {
         Assert.assertEquals(currenttime, modelCreateResponse.updatedAt.replaceAll(rejex, ""));
 
     }
+
+    @Test
+    public void testDeleteReqres() {
+        Specifications.runSpecification(Specifications.requestSpecification(URL), Specifications.responseSpecification204());
+        Response response = given()
+                .when()
+                .delete("/api/users/2")
+                .then().log().all()
+                .extract().response();
+        Assert.assertEquals(response.statusCode(), 204);
+    }
+
+    @Test
+    public void testRegistration() {
+        Integer id = 4;
+        String token = "QpwL5tke4Pnpja7X4";
+
+        ModelRegistrationRequest modelRegistrationRequest = new ModelRegistrationRequest("eve.holt@reqres.in", "pistol");
+        Specifications.runSpecification(Specifications.requestSpecification(URL), Specifications.responseSpecification200());
+        ModelRegistrationResponse modelRegistrationResponse = given()
+                .body(modelRegistrationRequest)
+                .when()
+                .post("api/register")
+                .then().log().all()
+                .extract().response().as(ModelRegistrationResponse.class);
+
+        Assert.assertEquals(modelRegistrationResponse.getId(), id);
+        Assert.assertEquals(modelRegistrationResponse.getToken(), token);
+    }
+
+    @Test
+    public void testRgistration400() {
+        String error = "Missing password";
+        ModelRegistrationRequest modelRegistrationRequest = new ModelRegistrationRequest("sydney@fife");
+        Specifications.runSpecification(Specifications.requestSpecification(URL), Specifications.responseSpecification400());
+        ModelRegistrationResponse modelRegistrationResponse = given()
+                .body(modelRegistrationRequest)
+                .when()
+                .post("api/register")
+                .then().log().all()
+                .extract().response().as(ModelRegistrationResponse.class);
+
+        Assert.assertEquals(modelRegistrationResponse.getError(), error);
+
+
+    }
+
+    @Test
+    public void testLogin200() {
+        String token = "QpwL5tke4Pnpja7X4";
+        ModelRegistrationRequest modelRegistrationRequest = new ModelRegistrationRequest("eve.holt@reqres.in", "cityslicka");
+        Specifications.runSpecification(Specifications.requestSpecification(URL), Specifications.responseSpecification200());
+        ModelRegistrationResponse modelRegistrationResponse = given()
+                .body(modelRegistrationRequest)
+                .when()
+                .post("/api/login")
+                .then().log().all()
+                .extract().response().as(ModelRegistrationResponse.class);
+
+        Assert.assertEquals(modelRegistrationResponse.getToken(), token);
+    }
+
+    @Test
+    public void testLogin400() {
+        String error = "Missing password";
+        ModelRegistrationRequest modelRegistrationRequest = new ModelRegistrationRequest("peter@klaven");
+        Specifications.runSpecification(Specifications.requestSpecification(URL), Specifications.responseSpecification400());
+        ModelRegistrationResponse modelRegistrationResponse = given()
+                .body(modelRegistrationRequest)
+                .when()
+                .post("/api/login")
+                .then().log().all()
+                .extract().response().as(ModelRegistrationResponse.class);
+
+        Assert.assertEquals(modelRegistrationResponse.getError(), error);
+
+    }
+
+
+    @Test
+    public void testDelayedResponsed(){
+        SPEC200(); //Specifications.runSpecification(Specifications.requestSpecification(URL), Specifications.responseSpecification200());
+        List<ModelUsers> modelUsersList = given()
+                .when()
+                .get("api/users?delay=3")
+                .then().log().all()
+                .extract().body().jsonPath().getList("data", ModelUsers.class);
+
+        Assert.assertEquals(modelUsersList.size(),6);
+    }
+
 
 
 }
