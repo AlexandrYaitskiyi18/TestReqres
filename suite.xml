@@ -2,8 +2,9 @@
 <suite name="TestAPIRegres">
     <test name="TestAPIRegres" >
         <classes>
+            <class name="TestGetReqres"/>
+            <class name="TestOtherReqres"/>
             <class name="TestReqres"/>
-
         </classes>
     </test>
 </suite>
